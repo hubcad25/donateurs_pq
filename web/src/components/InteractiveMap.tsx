@@ -15,6 +15,7 @@ interface MapProps {
 
 const InteractiveMap: React.FC<MapProps> = ({ metric = "Somme" }) => {
   const [data, setData] = useState<FeatureCollection<Geometry, GeoJsonProperties> | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [mask, setMask] = useState<any>(null);
 
   useEffect(() => {
@@ -26,14 +27,17 @@ const InteractiveMap: React.FC<MapProps> = ({ metric = "Somme" }) => {
         setData(geojson);
 
         // Créer un masque pour cacher le reste du monde
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const outline = topojson.merge(topojsonData, topojsonData.objects[objectKey].geometries) as any;
         
         // On construit les anneaux pour le trou (Québec)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let holes: any[] = [];
         if (outline.type === "Polygon") {
           holes = outline.coordinates;
         } else if (outline.type === "MultiPolygon") {
           // Pour un MultiPolygon, on prend le premier anneau de chaque polygone (l'extérieur)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           holes = outline.coordinates.map((poly: any) => poly[0]);
         }
 
@@ -80,6 +84,7 @@ const InteractiveMap: React.FC<MapProps> = ({ metric = "Somme" }) => {
       .range(["#000000", "#ffffff", "#2563eb"]);
   }, [data, metric]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const style = (feature: any) => {
     const value = feature.properties[metric];
     return {
@@ -91,6 +96,7 @@ const InteractiveMap: React.FC<MapProps> = ({ metric = "Somme" }) => {
     };
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onEachFeature = (feature: any, layer: L.Layer) => {
     layer.on({
       mouseover: (e) => {

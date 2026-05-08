@@ -84,8 +84,10 @@ export const DataDashboard: React.FC = () => {
         // Use the first object key if 'map_data' is not found
         const objectKey = topology.objects.map_data ? 'map_data' : Object.keys(topology.objects)[0];
         const rtaObjects = topology.objects[objectKey];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const geojson = topojson.feature(topology, rtaObjects) as any;
         
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const properties = geojson.features.map((f: any) => f.properties);
         setData(properties);
         setLoading(false);
