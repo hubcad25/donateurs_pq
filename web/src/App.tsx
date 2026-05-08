@@ -26,6 +26,9 @@ function App() {
               <option value="Moyenne">Don moyen</option>
               <option value="median_income_hh">Revenu médian</option>
               <option value="pct_income_100k_plus">% Revenu 100k+</option>
+              <option value="pct_owners">% Propriétaires</option>
+              <option value="pct_edu_university">% Universitaires</option>
+              <option value="pct_french">% Langue française</option>
             </select>
           </div>
         )}

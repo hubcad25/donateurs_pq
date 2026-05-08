@@ -34,11 +34,13 @@ fi
 
 # Process with mapshaper
 # 1. Filter for Quebec (PRUID = 24)
-# 2. Simplify geometry (10% weighted area)
-# 3. Output as TopoJSON
+# 2. Project to WGS84 (longitude/latitude)
+# 3. Simplify geometry (10% weighted area)
+# 4. Output as TopoJSON
 echo "Processing geometry with mapshaper..."
 npx mapshaper "$SHP_FILE" \
     -filter "PRUID == '24'" \
+    -proj wgs84 \
     -simplify 10% \
     -o format=topojson "$OUTPUT_FILE"
 
