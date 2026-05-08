@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { DataDashboard } from './components/DataDashboard'
 import InteractiveMap from './components/InteractiveMap'
 
