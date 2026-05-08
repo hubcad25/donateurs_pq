@@ -96,7 +96,7 @@ def process_census_data(z):
     df_pivot['pct_owners'] = (df_pivot['tenure_owner'] / df_pivot['tenure_total']) * 100
     
     final_cols = [
-        'median_income_hh', 'pct_income_0_30k', 'pct_income_30_60k', 'pct_income_60_100k', 'pct_income_100k_plus',
+        'age_total', 'median_income_hh', 'pct_income_0_30k', 'pct_income_30_60k', 'pct_income_60_100k', 'pct_income_100k_plus',
         'pct_age_15_24', 'pct_age_25_34', 'pct_age_35_44', 'pct_age_45_54', 'pct_age_55_64', 'pct_age_65_74', 'pct_age_75_plus',
         'pct_edu_none', 'pct_edu_secondary', 'pct_edu_college', 'pct_edu_university',
         'pct_french', 'pct_owners'
