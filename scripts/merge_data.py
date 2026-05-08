@@ -6,8 +6,9 @@ def merge_data():
     print("Merging data...")
     
     # Load processed data
-    donations_df = pd.read_csv('data/processed/donations_rta.csv')
-    census_df = pd.read_csv('data/processed/census_2021_rta.csv')
+    # Use fillna(0) to avoid NaN values in JSON which break browser JSON.parse()
+    donations_df = pd.read_csv('data/processed/donations_rta.csv').fillna(0)
+    census_df = pd.read_csv('data/processed/census_2021_rta.csv').fillna(0)
     
     # Load geometry
     with open('data/processed/rta_geometries.json', 'r') as f:
@@ -19,9 +20,6 @@ def merge_data():
     census_dict = census_df.set_index('GEO_NAME').to_dict(orient='index')
     
     # Inject data into TopoJSON objects
-    # In TopoJSON, features are usually under objects.target_name.geometries
-    # Our script prepare_geometry.sh uses CFSAUID as the ID
-    
     object_name = list(topojson['objects'].keys())[0]
     geometries = topojson['objects'][object_name]['geometries']
     
@@ -49,6 +47,7 @@ def merge_data():
     output_path = 'web/public/data/map_data.topojson'
     
     with open(output_path, 'w') as f:
+        # allow_nan=False ensures we catch any remaining NaNs at dump time
         json.dump(topojson, f)
         
     print(f"Success! Merged data saved to {output_path}")
