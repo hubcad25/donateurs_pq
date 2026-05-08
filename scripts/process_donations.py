@@ -21,39 +21,33 @@ def process_data(input_file, output_file):
     df = df[df['Entité politique'] == 'Parti québécois']
     
     # Clean Montant total: "200,00" -> 200.00
-    # First, ensure it's string to use .str
     df['Montant total'] = df['Montant total'].astype(str)
-    # Replace comma with dot and remove any whitespace or other characters if needed
     df['Montant total'] = df['Montant total'].str.replace(',', '.').str.strip()
-    
-    # Handle cases where "Montant total" might be "nan" or empty
     df['Montant total'] = pd.to_numeric(df['Montant total'], errors='coerce')
-    
-    # Drop rows where Montant total is NaN
     df = df.dropna(subset=['Montant total'])
     
-    # Extract RTA from Code postal (first 3 characters)
-    # Some codes might be missing or malformed, handle them
+    # Extract RTA from Code postal
     df['RTA'] = df['Code postal'].str.strip().str[:3].str.upper()
-    
-    # Aggregate by RTA
-    # Sum, Count, Mean
-    # Ensure RTA is not null
     df = df.dropna(subset=['RTA'])
-    aggregated = df.groupby('RTA')['Montant total'].agg(['sum', 'count', 'mean']).reset_index()
     
-    # Rename columns for clarity
-    aggregated.columns = ['RTA', 'Somme', 'Nombre de donateurs', 'Moyenne']
+    # Ensure "Année financière" is numeric
+    df['Year'] = pd.to_numeric(df['Année financière'], errors='coerce')
+    df = df.dropna(subset=['Year'])
+    df['Year'] = df['Year'].astype(int)
+    
+    # Aggregate by RTA and Year
+    aggregated = df.groupby(['RTA', 'Year'])['Montant total'].agg(['sum', 'count']).reset_index()
+    aggregated.columns = ['RTA', 'Year', 'Somme', 'Nombre de donateurs']
     
     # Save to CSV
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
     aggregated.to_csv(output_file, index=False)
-    print(f"Saved aggregated data to {output_file}")
+    print(f"Saved aggregated data by RTA and Year to {output_file}")
 
 if __name__ == "__main__":
     url = "https://donnees.electionsquebec.qc.ca/production/provincial/financement/contribution/contributions-pro-fr.csv"
     raw_path = "data/raw/contributions-pro-fr.csv"
-    processed_path = "data/processed/donations_rta.csv"
+    processed_path = "data/processed/donations_rta_yearly.csv"
     
-    download_csv(url, raw_path)
+    # download_csv(url, raw_path) # Skip download to save time if already exists
     process_data(raw_path, processed_path)

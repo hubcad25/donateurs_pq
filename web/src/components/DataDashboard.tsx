@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import type { SortingState } from '@tanstack/react-table';
 import {
   createColumnHelper,
@@ -20,6 +20,7 @@ interface RTAData {
   pct_owners: number;
   age_total: number;
   intensity?: number;
+  donations_yearly?: Record<string, { Somme: number, 'Nombre de donateurs': number }>;
 }
 
 const columnHelper = createColumnHelper<RTAData>();
@@ -68,8 +69,12 @@ const columns = [
   }),
 ];
 
-export const DataDashboard: React.FC = () => {
-  const [data, setData] = useState<RTAData[]>([]);
+interface DashboardProps {
+  selectedYears?: number[];
+}
+
+export const DataDashboard: React.FC<DashboardProps> = ({ selectedYears = [] }) => {
+  const [rawData, setRawData] = useState<RTAData[]>([]);
   const [loading, setLoading] = useState(true);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
@@ -79,23 +84,11 @@ export const DataDashboard: React.FC = () => {
       try {
         const response = await fetch('/data/map_data.topojson');
         const topology = await response.json();
-        
-        // Extract properties from TopoJSON
-        // Use the first object key if 'map_data' is not found
         const objectKey = topology.objects.map_data ? 'map_data' : Object.keys(topology.objects)[0];
         const rtaObjects = topology.objects[objectKey];
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const geojson = topojson.feature(topology, rtaObjects) as any;
-        
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const properties = geojson.features.map((f: any) => {
-          const props = f.properties;
-          return {
-            ...props,
-            intensity: props.age_total > 0 ? (props.Somme / props.age_total) * 100 : 0
-          };
-        });
-        setData(properties);
+        const properties = geojson.features.map((f: any) => f.properties);
+        setRawData(properties);
         setLoading(false);
       } catch (error) {
         console.error('Error loading data:', error);
@@ -105,6 +98,30 @@ export const DataDashboard: React.FC = () => {
 
     fetchData();
   }, []);
+
+  const data = useMemo(() => {
+    return rawData.map(props => {
+      let currentSomme = 0;
+      let currentCount = 0;
+      
+      if (props.donations_yearly) {
+        selectedYears.forEach(year => {
+          const yearStr = year.toString();
+          if (props.donations_yearly![yearStr]) {
+            currentSomme += props.donations_yearly![yearStr].Somme || 0;
+            currentCount += props.donations_yearly![yearStr]['Nombre de donateurs'] || 0;
+          }
+        });
+      }
+      
+      return {
+        ...props,
+        Somme: currentSomme,
+        'Nombre de donateurs': currentCount,
+        intensity: props.age_total > 0 ? (currentSomme / props.age_total) * 100 : 0
+      };
+    });
+  }, [rawData, selectedYears]);
 
   const table = useReactTable({
     data,
@@ -127,7 +144,7 @@ export const DataDashboard: React.FC = () => {
   return (
     <div className="flex flex-col gap-4 p-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold">Explorateur de données RTA</h2>
+        <h2 className="text-xl font-bold">Explorateur de données RTA ({selectedYears.length} ans)</h2>
         <div className="flex items-center gap-2">
           <label htmlFor="search" className="text-sm font-medium">Rechercher RTA:</label>
           <input
@@ -176,9 +193,6 @@ export const DataDashboard: React.FC = () => {
             ))}
           </tbody>
         </table>
-      </div>
-      <div className="text-xs text-gray-500">
-        Affichage de {table.getRowModel().rows.length} RTAs
       </div>
     </div>
   );
