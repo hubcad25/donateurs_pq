@@ -21,9 +21,9 @@ function App() {
               onChange={(e) => setMetric(e.target.value)}
               className="bg-blue-800 text-white border border-blue-700 rounded px-2 py-1 text-sm"
             >
+              <option value="Intensity">Intensité ($ / 100 pers)</option>
               <option value="Somme">Somme des dons</option>
               <option value="Nombre de donateurs">Nombre de donateurs</option>
-              <option value="Moyenne">Don moyen</option>
               <option value="median_income_hh">Revenu médian</option>
               <option value="pct_income_100k_plus">% Revenu 100k+</option>
               <option value="pct_owners">% Propriétaires</option>

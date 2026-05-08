@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet';
 import { scaleLinear } from 'd3-scale';
-import { median } from 'd3-array';
+import { quantile } from 'd3-array';
 import * as topojson from 'topojson-client';
 import type { FeatureCollection, Geometry, GeoJsonProperties } from 'geojson';
 import L from 'leaflet';
@@ -70,23 +70,40 @@ const InteractiveMap: React.FC<MapProps> = ({ metric = "Somme" }) => {
   const colorScale = useMemo(() => {
     if (!data) return null;
     const values = data.features
-      .map((f) => f.properties?.[metric])
+      .map((f) => {
+        // Handle special case for 'Intensité' if needed, but for now we assume it's in properties
+        // If not in properties, we calculate it on the fly for the map too
+        if (metric === "Intensity") {
+          const { Somme, age_total } = f.properties || {};
+          return age_total > 0 ? (Somme / age_total) * 100 : 0;
+        }
+        return f.properties?.[metric];
+      })
       .filter((v) => v !== undefined && v !== null && v > 0) as number[];
     
     if (values.length === 0) return () => "#EEE";
 
-    const minVal = Math.min(...values);
-    const maxVal = Math.max(...values);
-    const midVal = median(values) || (minVal + maxVal) / 2;
+    // User wants: 0 (Red), 50 (Yellow), 75 (Green), 90 (Blue)
+    // We interpret these as percentiles for better visualization across different metrics
+    const sortedValues = [...values].sort((a, b) => a - b);
+    const p0 = sortedValues[0];
+    const p50 = quantile(sortedValues, 0.5) || 0;
+    const p75 = quantile(sortedValues, 0.75) || 0;
+    const p90 = quantile(sortedValues, 0.90) || 0;
 
     return scaleLinear<string>()
-      .domain([minVal, midVal, maxVal])
-      .range(["#000000", "#ffffff", "#2563eb"]);
+      .domain([p0, p50, p75, p90])
+      .range(["#ef4444", "#facc15", "#22c55e", "#2563eb"]); // Rouge, Jaune, Vert, Bleu
   }, [data, metric]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const style = (feature: any) => {
-    const value = feature.properties[metric];
+    let value = feature.properties[metric];
+    if (metric === "Intensity") {
+      const { Somme, age_total } = feature.properties;
+      value = age_total > 0 ? (Somme / age_total) * 100 : 0;
+    }
+    
     return {
       fillColor: value ? colorScale?.(value) : "#EEE",
       weight: 0.2, // Très fin
@@ -123,6 +140,8 @@ const InteractiveMap: React.FC<MapProps> = ({ metric = "Somme" }) => {
     const pct_65_plus = (pct_age_65_74 || 0) + (pct_age_75_plus || 0);
     const intensity = age_total > 0 ? (Somme / age_total) * 100 : 0;
 
+    const displayVal = metric === "Intensity" ? intensity : val;
+
     const popupContent = `
       <div class="p-2 min-w-[220px]">
         <h3 class="font-bold text-lg border-b mb-2 text-slate-800">RTA: ${CFSAUID}</h3>
@@ -135,8 +154,7 @@ const InteractiveMap: React.FC<MapProps> = ({ metric = "Somme" }) => {
             <strong>Intensité:</strong> 
             <span class="font-semibold">${intensity.toFixed(2)}$ / 100 pers.</span>
           </p>
-          <p class="flex justify-between pt-1"><strong>${metric}:</strong> <span>${val?.toLocaleString() || '0'}${metric.includes('Somme') || metric.includes('Moyenne') || metric.includes('income') ? '$' : ''}</span></p>
-          <p class="flex justify-between text-slate-500 italic"><strong>Don Moyen:</strong> <span>${Moyenne?.toFixed(2) || '0'}$</span></p>
+          <p class="flex justify-between pt-1"><strong>${metric}:</strong> <span>${displayVal?.toLocaleString() || '0'}${metric.includes('Somme') || metric.includes('Moyenne') || metric.includes('income') || metric === 'Intensity' ? '$' : ''}</span></p>
           <div class="border-t my-1"></div>
           <p class="flex justify-between"><strong>Population:</strong> <span>${age_total?.toLocaleString() || 'N/A'}</span></p>
           <p class="flex justify-between"><strong>Revenu Médian:</strong> <span>${median_income_hh?.toLocaleString() || '0'}$</span></p>
@@ -192,15 +210,21 @@ const InteractiveMap: React.FC<MapProps> = ({ metric = "Somme" }) => {
       {/* Légende flottante simplifiée */}
       <div className="absolute bottom-6 right-6 z-[1000] bg-white/90 backdrop-blur-sm p-4 rounded-xl shadow-2xl border border-slate-200">
         <h4 className="text-sm font-bold mb-3 text-slate-800 uppercase tracking-wider">Légende: {metric}</h4>
-        <div className="flex items-center gap-1">
-          <span className="text-xs text-slate-500 mr-2">Min (Noir)</span>
-          <div className="flex h-3 w-40 rounded-full overflow-hidden">
-             <div className="flex-1" style={{ background: 'linear-gradient(to right, #000000, #ffffff, #2563eb)' }}></div>
+        <div className="flex flex-col gap-2">
+          <div className="flex h-3 w-48 rounded-full overflow-hidden border border-slate-200">
+             <div className="flex-1" style={{ background: 'linear-gradient(to right, #ef4444, #facc15, #22c55e, #2563eb)' }}></div>
           </div>
-          <span className="text-xs text-slate-500 ml-2">Max (Bleu)</span>
+          <div className="flex justify-between text-[10px] text-slate-500 font-medium px-1">
+            <span>Min</span>
+            <span>50%</span>
+            <span>75%</span>
+            <span>90%</span>
+            <span>Max</span>
+          </div>
         </div>
-        <div className="flex justify-center mt-1">
-          <span className="text-[10px] text-slate-400">Blanc = Médiane</span>
+        <div className="mt-3 text-[10px] text-slate-400 leading-tight">
+          Échelle basée sur les centiles (0, 50, 75, 90).<br/>
+          Couleurs: <span className="text-red-500">R</span>-<span className="text-yellow-500">J</span>-<span className="text-green-500">V</span>-<span className="text-blue-500">B</span>
         </div>
       </div>
     </div>

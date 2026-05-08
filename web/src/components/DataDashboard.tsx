@@ -20,6 +20,7 @@ interface RTAData {
   pct_french: number;
   pct_owners: number;
   age_total: number;
+  intensity?: number;
 }
 
 const columnHelper = createColumnHelper<RTAData>();
@@ -29,6 +30,10 @@ const columns = [
     header: 'RTA',
     cell: info => <span className="font-mono font-bold">{String(info.getValue())}</span>,
   }),
+  columnHelper.accessor('intensity', {
+    header: 'Intensité ($/100p)',
+    cell: info => (info.getValue() as number)?.toLocaleString('fr-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+  }),
   columnHelper.accessor('Somme', {
     header: 'Somme ($)',
     cell: info => (info.getValue() as number)?.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' }),
@@ -36,10 +41,6 @@ const columns = [
   columnHelper.accessor('Nombre de donateurs', {
     header: 'Donateurs',
     cell: info => (info.getValue() as number)?.toLocaleString('fr-CA'),
-  }),
-  columnHelper.accessor('Moyenne', {
-    header: 'Moyenne ($)',
-    cell: info => (info.getValue() as number)?.toLocaleString('fr-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
   }),
   columnHelper.accessor('median_income_hh', {
     header: 'Revenu Médian',
@@ -88,7 +89,13 @@ export const DataDashboard: React.FC = () => {
         const geojson = topojson.feature(topology, rtaObjects) as any;
         
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const properties = geojson.features.map((f: any) => f.properties);
+        const properties = geojson.features.map((f: any) => {
+          const props = f.properties;
+          return {
+            ...props,
+            intensity: props.age_total > 0 ? (props.Somme / props.age_total) * 100 : 0
+          };
+        });
         setData(properties);
         setLoading(false);
       } catch (error) {
