@@ -115,19 +115,28 @@ const InteractiveMap: React.FC<MapProps> = ({ metric = "Somme" }) => {
     });
 
     const { 
-      CFSAUID, median_income_hh, Moyenne, [metric]: val,
+      CFSAUID, median_income_hh, Moyenne, Somme, [metric]: val,
       age_total, pct_age_15_24, pct_age_65_74, pct_age_75_plus,
       pct_edu_university, pct_owners, pct_french
     } = feature.properties;
     
     const pct_65_plus = (pct_age_65_74 || 0) + (pct_age_75_plus || 0);
+    const intensity = age_total > 0 ? (Somme / age_total) * 100 : 0;
 
     const popupContent = `
-      <div class="p-2 min-w-[200px]">
+      <div class="p-2 min-w-[220px]">
         <h3 class="font-bold text-lg border-b mb-2 text-slate-800">RTA: ${CFSAUID}</h3>
         <div class="space-y-1 text-sm">
-          <p class="flex justify-between"><strong>${metric}:</strong> <span>${val?.toLocaleString() || '0'}${metric.includes('Somme') || metric.includes('Moyenne') || metric.includes('income') ? '$' : ''}</span></p>
-          <p class="flex justify-between text-blue-800 font-medium"><strong>Don Moyen:</strong> <span>${Moyenne?.toFixed(2) || '0'}$</span></p>
+          <p class="flex justify-between text-blue-600 font-bold text-base">
+            <strong>Somme des dons:</strong> 
+            <span>${Somme?.toLocaleString() || '0'}$</span>
+          </p>
+          <p class="flex justify-between text-slate-700 pb-1 border-b">
+            <strong>Intensité:</strong> 
+            <span class="font-semibold">${intensity.toFixed(2)}$ / 100 pers.</span>
+          </p>
+          <p class="flex justify-between pt-1"><strong>${metric}:</strong> <span>${val?.toLocaleString() || '0'}${metric.includes('Somme') || metric.includes('Moyenne') || metric.includes('income') ? '$' : ''}</span></p>
+          <p class="flex justify-between text-slate-500 italic"><strong>Don Moyen:</strong> <span>${Moyenne?.toFixed(2) || '0'}$</span></p>
           <div class="border-t my-1"></div>
           <p class="flex justify-between"><strong>Population:</strong> <span>${age_total?.toLocaleString() || 'N/A'}</span></p>
           <p class="flex justify-between"><strong>Revenu Médian:</strong> <span>${median_income_hh?.toLocaleString() || '0'}$</span></p>

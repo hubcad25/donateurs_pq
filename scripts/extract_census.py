@@ -31,8 +31,8 @@ def process_census_data(z):
         261: 'inc_u5', 262: 'inc_5_10', 263: 'inc_10_15', 264: 'inc_15_20', 265: 'inc_20_25', 266: 'inc_25_30',
         267: 'inc_30_35', 268: 'inc_35_40', 269: 'inc_40_45', 270: 'inc_50_60',
         271: 'inc_60_70', 272: 'inc_70_80', 273: 'inc_80_90', 274: 'inc_90_100',
-        277: 'inc_100_125', 278: 'inc_125_150', 279: 'inc_150_200', 280: 'inc_200p',
-        281: 'median_income_hh', # Median total income of household
+        277: 'inc_100_125', 278: 'inc_125_150', 279: 'inc_150_200',         280: 'inc_200p',
+        243: 'median_income_hh', # Median total income of household in 2020 ($)
         
         # Éducation (ID 1998 = Total population 15+)
         1998: 'edu_total_15p',
