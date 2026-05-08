@@ -132,7 +132,7 @@ const InteractiveMap: React.FC<MapProps> = ({ metric = "Somme" }) => {
     });
 
     const { 
-      CFSAUID, median_income_hh, Moyenne, Somme, [metric]: val,
+      CFSAUID, median_income_hh, Somme, [metric]: val,
       age_total, pct_age_15_24, pct_age_65_74, pct_age_75_plus,
       pct_edu_university, pct_owners, pct_french
     } = feature.properties;
@@ -154,7 +154,7 @@ const InteractiveMap: React.FC<MapProps> = ({ metric = "Somme" }) => {
             <strong>Intensité:</strong> 
             <span class="font-semibold">${intensity.toFixed(2)}$ / 100 pers.</span>
           </p>
-          <p class="flex justify-between pt-1"><strong>${metric}:</strong> <span>${displayVal?.toLocaleString() || '0'}${metric.includes('Somme') || metric.includes('Moyenne') || metric.includes('income') || metric === 'Intensity' ? '$' : ''}</span></p>
+          <p class="flex justify-between pt-1"><strong>${metric}:</strong> <span>${displayVal?.toLocaleString() || '0'}${metric.includes('Somme') || metric.includes('income') || metric === 'Intensity' ? '$' : ''}</span></p>
           <div class="border-t my-1"></div>
           <p class="flex justify-between"><strong>Population:</strong> <span>${age_total?.toLocaleString() || 'N/A'}</span></p>
           <p class="flex justify-between"><strong>Revenu Médian:</strong> <span>${median_income_hh?.toLocaleString() || '0'}$</span></p>

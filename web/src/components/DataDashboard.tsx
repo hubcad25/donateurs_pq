@@ -14,7 +14,6 @@ interface RTAData {
   CFSAUID: string;
   Somme: number;
   'Nombre de donateurs': number;
-  Moyenne: number;
   median_income_hh: number;
   pct_income_100k_plus: number;
   pct_french: number;
