@@ -1,0 +1,14 @@
+# Data
+data/raw/
+*.zip
+*.csv
+!data/processed/*.csv
+
+# Beads
+.beads/
+
+# Misc
+.DS_Store
+.env
+node_modules/
+dist/
